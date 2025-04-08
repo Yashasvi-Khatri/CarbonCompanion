@@ -1,0 +1,106 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 140 20% 99%;
+    --foreground: 142 30% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 142 30% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 142 30% 10%;
+
+    --primary: 142 60% 33%;
+    --primary-foreground: 144 70% 98%;
+
+    --secondary: 145 30% 96%;
+    --secondary-foreground: 142 25% 25%;
+
+    --muted: 145 30% 92%;
+    --muted-foreground: 142 15% 45%;
+
+    --accent: 140 40% 90%;
+    --accent-foreground: 142 30% 25%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 145 30% 90%;
+    --input: 145 30% 90%;
+    --ring: 142 70% 35%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 140 20% 97%;
+    --sidebar-foreground: 142 30% 25%;
+    --sidebar-primary: 142 60% 33%;
+    --sidebar-primary-foreground: 144 70% 98%;
+    --sidebar-accent: 145 30% 92%;
+    --sidebar-accent-foreground: 142 30% 25%;
+    --sidebar-border: 145 30% 90%;
+    --sidebar-ring: 142 70% 35%;
+  }
+
+  .dark {
+    --background: 142 30% 8%;
+    --foreground: 144 70% 98%;
+
+    --card: 142 30% 10%;
+    --card-foreground: 144 70% 98%;
+
+    --popover: 142 30% 10%;
+    --popover-foreground: 144 70% 98%;
+
+    --primary: 142 60% 40%;
+    --primary-foreground: 144 70% 98%;
+
+    --secondary: 142 25% 16%;
+    --secondary-foreground: 144 70% 98%;
+
+    --muted: 142 25% 16%;
+    --muted-foreground: 142 15% 65%;
+
+    --accent: 142 25% 16%;
+    --accent-foreground: 144 70% 98%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 144 70% 98%;
+
+    --border: 142 25% 16%;
+    --input: 142 25% 16%;
+    --ring: 142 70% 50%;
+    
+    --sidebar-background: 142 30% 12%;
+    --sidebar-foreground: 144 70% 90%;
+    --sidebar-primary: 142 60% 40%;
+    --sidebar-primary-foreground: 144 70% 98%;
+    --sidebar-accent: 142 25% 20%;
+    --sidebar-accent-foreground: 144 70% 90%;
+    --sidebar-border: 142 25% 20%;
+    --sidebar-ring: 142 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .eco-gradient {
+    @apply bg-gradient-to-r from-green-500 to-sky-500;
+  }
+  
+  .eco-gradient-text {
+    @apply bg-gradient-to-r from-green-600 to-sky-600 bg-clip-text text-transparent;
+  }
+}
