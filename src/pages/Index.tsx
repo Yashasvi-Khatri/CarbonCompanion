@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Leaf, ArrowRight, AlertTriangle, Plus, User, LogOut, Gift, Trophy, Award, Star, ShieldCheck, Clock } from 'lucide-react';
+import { Leaf, ArrowRight, AlertTriangle, Plus, User, LogOut, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -12,9 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import CarbonActivityCard from '@/components/CarbonActivityCard';
 import MicroHabitCard from '@/components/MicroHabitCard';
 import CarbonChart from '@/components/CarbonChart';
@@ -31,7 +29,11 @@ import {
   UserProfile
 } from '@/lib/carbon-utils';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
+// Define reward interface
 interface Reward {
   id: string;
   title: string;
@@ -42,10 +44,9 @@ interface Reward {
   isAvailable: boolean;
 }
 
-interface ExtendedUserProfile extends Omit<UserProfile, 'name'> {
+// Extend UserProfile type to include redeemedRewards
+interface ExtendedUserProfile extends UserProfile {
   redeemedRewards?: string[];
-  email?: string;
-  name: string;
 }
 
 const Index = () => {
@@ -54,8 +55,8 @@ const Index = () => {
   const [activities, setActivities] = useState<CarbonActivity[]>(MOCK_ACTIVITIES);
   const [user, setUser] = useState<ExtendedUserProfile | null>(null);
   const [habits, setHabits] = useState<MicroHabit[]>([]);
-  const [rewards, setRewards] = useState<Reward[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [rewards, setRewards] = useState<Reward[]>([]);
   
   useEffect(() => {
     // Check for logged in user
@@ -63,20 +64,18 @@ const Index = () => {
     
     if (storedUser) {
       const userObj = JSON.parse(storedUser);
-      
-      // Initialize redeemedRewards if it doesn't exist
+      // Make sure redeemedRewards exists
       if (!userObj.redeemedRewards) {
         userObj.redeemedRewards = [];
       }
-      
       setUser(userObj);
     } else {
       // Default to MOCK_USER if no stored user
-      const mockUserWithRewards = {
+      const mockUserWithRedeemed = {
         ...MOCK_USER,
         redeemedRewards: []
       };
-      setUser(mockUserWithRewards);
+      setUser(mockUserWithRedeemed);
     }
   }, []);
   
@@ -94,7 +93,7 @@ const Index = () => {
     
     setHabits(habitsWithAdoptionStatus);
     
-    // Initialize rewards
+    // Setup rewards data
     setRewards([
       {
         id: '1',
@@ -110,7 +109,7 @@ const Index = () => {
         title: 'Tree Planter Badge',
         description: 'Earn this badge after adopting 5 eco-habits',
         pointCost: 100,
-        icon: <Award className="h-8 w-8 text-green-500" />,
+        icon: <Gift className="h-8 w-8 text-green-500" />,
         category: 'badge',
         isAvailable: user.points >= 100,
       },
@@ -119,39 +118,12 @@ const Index = () => {
         title: 'Carbon Conscious Tier',
         description: 'Unlock advanced features and exclusive rewards',
         pointCost: 500,
-        icon: <Trophy className="h-8 w-8 text-amber-500" />,
+        icon: <Gift className="h-8 w-8 text-amber-500" />,
         category: 'tier',
         isAvailable: user.points >= 500,
       },
-      {
-        id: '4',
-        title: 'Carbon Neutral Certificate',
-        description: 'Digital certificate recognizing your carbon reduction efforts',
-        pointCost: 300,
-        icon: <ShieldCheck className="h-8 w-8 text-blue-500" />,
-        category: 'badge',
-        isAvailable: user.points >= 300,
-      },
-      {
-        id: '5',
-        title: '10% Off Public Transit',
-        description: 'Discount on monthly public transportation passes',
-        pointCost: 400,
-        icon: <Gift className="h-8 w-8 text-green-500" />,
-        category: 'voucher',
-        isAvailable: user.points >= 400,
-      },
-      {
-        id: '6',
-        title: 'Eco Warrior Badge',
-        description: 'Awarded for consistent carbon reduction over 30 days',
-        pointCost: 250,
-        icon: <Star className="h-8 w-8 text-yellow-500" />,
-        category: 'badge',
-        isAvailable: user.points >= 250,
-      },
     ]);
-  }, [activities, user?.adoptedHabits, user?.points]);
+  }, [activities, user?.adoptedHabits]);
   
   const handleAddActivity = (activity: CarbonActivity) => {
     setActivities(prev => [activity, ...prev]);
@@ -182,14 +154,6 @@ const Index = () => {
       )
     );
     
-    // Update rewards availability based on new points
-    setRewards(prev => 
-      prev.map(reward => ({
-        ...reward,
-        isAvailable: updatedUser.points >= reward.pointCost,
-      }))
-    );
-    
     toast({
       title: "Habit adopted!",
       description: "Keep it up! You've earned 10 points.",
@@ -206,23 +170,18 @@ const Index = () => {
       return;
     }
     
+    // Get user's redeemed rewards or initialize empty array
+    const redeemedRewards = user.redeemedRewards || [];
+    
     // Update user points
     const updatedUser = {
       ...user,
       points: user.points - reward.pointCost,
-      redeemedRewards: [...(user.redeemedRewards || []), reward.id],
+      redeemedRewards: [...redeemedRewards, reward.id],
     };
     
     setUser(updatedUser);
     localStorage.setItem('carbonCompanionUser', JSON.stringify(updatedUser));
-    
-    // Update rewards availability based on new points
-    setRewards(prev => 
-      prev.map(reward => ({
-        ...reward,
-        isAvailable: updatedUser.points >= reward.pointCost,
-      }))
-    );
     
     toast({
       title: 'Reward redeemed!',
@@ -251,32 +210,34 @@ const Index = () => {
     })
     .reduce((sum, activity) => sum + activity.carbonKg, 0);
   
-  // Calculate next tier for rewards
-  const currentPoints = user?.points || 0;
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+  
+  // Calculate next tier
+  const currentPoints = user.points;
   const nextTier = {
     name: 'Carbon Conscious',
     points: 500,
     progress: Math.min((currentPoints / 500) * 100, 100),
   };
   
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-  
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
-      <header className="border-b">
+      <header className="border-b shadow-sm bg-background">
         <div className="container py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Leaf className="h-6 w-6 text-green-500" />
-            <h1 className="text-xl font-bold">Carbon Companion</h1>
+            <div className="bg-primary/10 p-2 rounded-full">
+              <Leaf className="h-6 w-6 text-primary" />
+            </div>
+            <h1 className="text-xl font-bold eco-gradient-text">Carbon Companion</h1>
           </div>
           
           <div className="flex items-center gap-4">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="rounded-full hover:shadow-md transition-all">
                   <Plus className="h-4 w-4 mr-1" />
                   Add Activity
                 </Button>
@@ -288,23 +249,25 @@ const Index = () => {
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <User className="h-4 w-4" />
-                  {user?.name || 'Account'}
+                <Button variant="ghost" size="sm" className="gap-2 rounded-full hover:shadow-md transition-all">
+                  <div className="bg-primary/10 p-1 rounded-full">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="hidden sm:inline">{user?.name || 'Account'}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/account')}>
-                  <User className="h-4 w-4 mr-2" />
+              <DropdownMenuContent align="end" className="rounded-xl shadow-lg border border-border/50 bg-card">
+                <DropdownMenuItem onClick={() => navigate('/account')} className="rounded-lg hover:bg-primary/10">
+                  <User className="h-4 w-4 mr-2 text-primary" />
                   My Account
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('rewards')}>
-                  <Gift className="h-4 w-4 mr-2" />
+                <DropdownMenuItem onClick={() => navigate('/rewards')} className="rounded-lg hover:bg-primary/10">
+                  <Gift className="h-4 w-4 mr-2 text-primary" />
                   Rewards ({user.points} points)
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
+                <DropdownMenuItem onClick={handleLogout} className="rounded-lg hover:bg-destructive/10">
+                  <LogOut className="h-4 w-4 mr-2 text-destructive" />
                   Log Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -314,163 +277,207 @@ const Index = () => {
       </header>
       
       {/* Navigation */}
-      <div className="bg-muted border-b">
+      <div className="bg-muted/50 border-b">
         <div className="container">
-          <div className="flex overflow-x-auto">
-            <Button 
-              variant={activeTab === 'dashboard' ? "default" : "ghost"} 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              data-state={activeTab === 'dashboard' ? 'active' : undefined}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              Dashboard
-            </Button>
-            <Button 
-              variant={activeTab === 'activities' ? "default" : "ghost"}
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              data-state={activeTab === 'activities' ? 'active' : undefined}
-              onClick={() => setActiveTab('activities')}
-            >
-              Activities
-            </Button>
-            <Button 
-              variant={activeTab === 'habits' ? "default" : "ghost"}
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              data-state={activeTab === 'habits' ? 'active' : undefined}
-              onClick={() => setActiveTab('habits')}
-            >
-              Eco-Habits
-            </Button>
-            <Button 
-              variant={activeTab === 'rewards' ? "default" : "ghost"}
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              data-state={activeTab === 'rewards' ? 'active' : undefined}
-              onClick={() => setActiveTab('rewards')}
-            >
-              Rewards
-            </Button>
+          <div className="flex overflow-x-auto pb-1 pt-1">
+            {/* Wrap the TabsList in a Tabs component */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="bg-transparent flex justify-start w-full gap-1">
+                <TabsTrigger 
+                  value="dashboard"
+                  className="rounded-full bg-background/70 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                >
+                  Dashboard
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="activities"
+                  className="rounded-full bg-background/70 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                >
+                  Activities
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="habits"
+                  className="rounded-full bg-background/70 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                >
+                  Eco-Habits
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="rewards"
+                  className="rounded-full bg-background/70 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                >
+                  Rewards
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
       </div>
       
       {/* Main content */}
       <main className="flex-1 container py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-fade-in">
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* User progress card */}
-              <UserProgress user={user} />
+              <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+                <CardContent className="p-0">
+                  <UserProgress user={user} />
+                </CardContent>
+              </Card>
               
               {/* Day Tracker */}
-              <DayTracker activities={activities} />
+              <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+                <CardContent className="p-0">
+                  <DayTracker activities={activities} />
+                </CardContent>
+              </Card>
               
               {/* Quick stats */}
-              <div className="bg-secondary p-6 rounded-lg">
-                <h3 className="text-lg font-semibold mb-2">Total Carbon Impact</h3>
-                <p className="text-3xl font-bold eco-gradient-text">{totalCarbon.toFixed(1)} kg CO₂</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  From {activities.length} tracked activities
-                </p>
-              </div>
+              <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden bg-gradient-to-br from-secondary to-secondary/60">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-2">Total Carbon Impact</h3>
+                  <p className="text-3xl font-bold eco-gradient-text">{totalCarbon.toFixed(1)} kg CO₂</p>
+                  <div className="flex items-center mt-4 text-sm text-muted-foreground">
+                    <Leaf className="h-4 w-4 mr-2 text-green-500" />
+                    <span>From {activities.length} tracked activities</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
             
             {/* Charts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <CarbonChart 
-                activities={activities} 
-                chartType="daily" 
-                title="Daily Carbon Footprint" 
-              />
-              <CarbonChart 
-                activities={activities} 
-                chartType="category" 
-                title="Carbon by Category" 
-              />
+              <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Daily Carbon Footprint</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CarbonChart 
+                    activities={activities} 
+                    chartType="daily" 
+                    title="" 
+                  />
+                </CardContent>
+              </Card>
+              
+              <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Carbon by Category</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CarbonChart 
+                    activities={activities} 
+                    chartType="category" 
+                    title="" 
+                  />
+                </CardContent>
+              </Card>
             </div>
             
             {/* Suggested habits */}
-            <div>
-              <h2 className="text-xl font-bold mb-4">Suggested Eco Habits</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {habits.slice(0, 3).map(habit => (
-                  <MicroHabitCard 
-                    key={habit.id} 
-                    habit={habit} 
-                    onAdopt={handleAdoptHabit}
-                  />
-                ))}
-              </div>
-            </div>
+            <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Suggested Eco Habits</CardTitle>
+                <CardDescription>Small changes that make a big difference</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {habits.slice(0, 3).map(habit => (
+                    <MicroHabitCard 
+                      key={habit.id} 
+                      habit={habit} 
+                      onAdopt={handleAdoptHabit}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Button 
+                  variant="ghost" 
+                  className="ml-auto text-primary hover:text-primary/80"
+                  onClick={() => setActiveTab('habits')}
+                >
+                  View all habits
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
           </TabsContent>
           
           {/* Activities Tab */}
           <TabsContent value="activities" className="space-y-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Your Activities</h2>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Activity
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <CarbonActivityForm onAddActivity={handleAddActivity} />
-                </DialogContent>
-              </Dialog>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activities.map(activity => (
-                <CarbonActivityCard key={activity.id} activity={activity} />
-              ))}
-            </div>
+            <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-xl">Your Activities</CardTitle>
+                    <CardDescription>Track and monitor your carbon footprint</CardDescription>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="rounded-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Activity
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <CarbonActivityForm onAddActivity={handleAddActivity} />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activities.map(activity => (
+                    <CarbonActivityCard key={activity.id} activity={activity} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           {/* Habits Tab */}
           <TabsContent value="habits" className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold mb-4">Eco Habits</h2>
-              <p className="text-muted-foreground mb-6">
-                These personalized habits are selected based on your carbon footprint to help you reduce your impact.
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {habits.map(habit => (
-                  <MicroHabitCard 
-                    key={habit.id} 
-                    habit={habit} 
-                    onAdopt={handleAdoptHabit}
-                  />
-                ))}
-              </div>
-            </div>
+            <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-xl">Eco Habits</CardTitle>
+                <CardDescription>
+                  These personalized habits are selected based on your carbon footprint to help you reduce your impact.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {habits.map(habit => (
+                    <MicroHabitCard 
+                      key={habit.id} 
+                      habit={habit} 
+                      onAdopt={handleAdoptHabit}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
             
-            <Separator className="my-6" />
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Your Impact</h3>
-              <div className="bg-muted p-6 rounded-lg text-center">
+            <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-lg">Your Impact</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center py-8">
                 <p className="text-lg mb-2">You've saved</p>
-                <p className="text-4xl font-bold eco-gradient-text mb-2">{user.totalSavedKg} kg CO₂</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-4xl font-bold eco-gradient-text mb-4">{user.totalSavedKg} kg CO₂</p>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   That's like taking {Math.round(user.totalSavedKg / 20)} trees' worth of CO₂ out of the atmosphere!
                 </p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           {/* Rewards Tab */}
           <TabsContent value="rewards" className="space-y-6">
-            <h1 className="text-2xl font-bold mb-6">Rewards & Achievements</h1>
-            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card className="col-span-1 md:col-span-3">
-                <CardHeader className="pb-2">
-                  <CardTitle>Your Points</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <Card className="col-span-1 md:col-span-3 shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+                <CardContent className="pt-6">
                   <div className="flex items-end gap-2 mb-2">
                     <span className="text-4xl font-bold eco-gradient-text">{user.points}</span>
                     <span className="text-muted-foreground">carbon points</span>
@@ -486,83 +493,78 @@ const Index = () => {
                       <span className="text-xs text-muted-foreground">Current</span>
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-muted-foreground">{nextTier.name}</span>
-                        <Trophy className="h-3 w-3 text-amber-500" />
+                        <Gift className="h-3 w-3 text-amber-500" />
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle>Earn More</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-start gap-2">
-                      <Clock className="h-4 w-4 text-green-500 mt-0.5" />
+              <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+                <CardContent className="pt-6">
+                  <h3 className="font-medium text-lg mb-4">Earn More</h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-2 bg-primary/5 p-2 rounded-lg">
+                      <Gift className="h-4 w-4 text-green-500 mt-0.5" />
                       <span className="text-sm">Complete 7-day streak</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <Star className="h-4 w-4 text-amber-500 mt-0.5" />
+                    <li className="flex items-start gap-2 bg-primary/5 p-2 rounded-lg">
+                      <Gift className="h-4 w-4 text-amber-500 mt-0.5" />
                       <span className="text-sm">Adopt 3 more eco-habits</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <Award className="h-4 w-4 text-blue-500 mt-0.5" />
+                    <li className="flex items-start gap-2 bg-primary/5 p-2 rounded-lg">
+                      <Gift className="h-4 w-4 text-blue-500 mt-0.5" />
                       <span className="text-sm">Reduce weekly emissions by 5%</span>
                     </li>
                   </ul>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full mt-4"
-                    onClick={() => setActiveTab('dashboard')}
-                  >
-                    Go to Dashboard
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
                 </CardContent>
               </Card>
             </div>
             
-            <h2 className="text-xl font-bold mb-4">Available Rewards</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rewards.map((reward) => (
-                <Card key={reward.id} className={!reward.isAvailable ? 'opacity-70' : ''}>
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                        {reward.icon}
-                      </div>
-                      <Badge variant={reward.isAvailable ? 'default' : 'outline'}>
-                        {reward.pointCost} points
-                      </Badge>
-                    </div>
-                    
-                    <h3 className="font-medium text-lg mb-2">{reward.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {reward.description}
-                    </p>
-                    
-                    <Badge className="mb-4" variant="outline">
-                      {reward.category === 'voucher' ? 'Discount Voucher' : 
-                       reward.category === 'badge' ? 'Achievement Badge' : 'Membership Tier'}
-                    </Badge>
-                    
-                    <Button 
-                      className="w-full" 
-                      variant={reward.isAvailable ? 'default' : 'outline'}
-                      disabled={!reward.isAvailable}
-                      onClick={() => handleRedeemReward(reward)}
-                    >
-                      {reward.isAvailable ? 'Redeem Reward' : `Need ${reward.pointCost - user.points} more points`}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-xl">Available Rewards</CardTitle>
+                <CardDescription>Redeem your points for these eco-friendly rewards</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {rewards.map((reward) => (
+                    <Card key={reward.id} className={`shadow-sm border border-border/50 overflow-hidden 
+                      ${!reward.isAvailable ? 'opacity-70' : 'hover:shadow-md transition-all'}`}>
+                      <CardContent className="pt-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            {reward.icon}
+                          </div>
+                          <Badge variant={reward.isAvailable ? 'default' : 'outline'} className="rounded-full">
+                            {reward.pointCost} points
+                          </Badge>
+                        </div>
+                        
+                        <h3 className="font-medium text-lg mb-2">{reward.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {reward.description}
+                        </p>
+                        
+                        <Badge className="mb-4 rounded-full" variant="outline">
+                          {reward.category === 'voucher' ? 'Discount Voucher' : 
+                          reward.category === 'badge' ? 'Achievement Badge' : 'Membership Tier'}
+                        </Badge>
+                        
+                        <Button 
+                          className="w-full rounded-full" 
+                          variant={reward.isAvailable ? 'default' : 'outline'}
+                          disabled={!reward.isAvailable}
+                          onClick={() => handleRedeemReward(reward)}
+                        >
+                          {reward.isAvailable ? 'Redeem Reward' : `Need ${reward.pointCost - user.points} more points`}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
