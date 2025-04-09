@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Leaf, ArrowRight, AlertTriangle, Plus, User, LogOut, Gift } from 'lucide-react';
+import { Leaf, ArrowRight, AlertTriangle, Plus, User, LogOut, Gift, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +19,7 @@ import CarbonChart from '@/components/CarbonChart';
 import UserProgress from '@/components/UserProgress';
 import DayTracker from '@/components/DayTracker';
 import CarbonActivityForm from '@/components/CarbonActivityForm';
+import RoutePlannerForm from '@/components/RoutePlannerForm';
 import Footer from '@/components/Footer';
 import {
   CarbonActivity,
@@ -307,6 +308,12 @@ const Index = () => {
                 >
                   Rewards
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="routeplanner"
+                  className="rounded-full bg-background/70 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                >
+                  Route Planner
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -562,6 +569,70 @@ const Index = () => {
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Route Planner Tab */}
+          <TabsContent value="routeplanner" className="space-y-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Map className="h-5 w-5 text-primary" />
+                  <span>Eco-Friendly Route Planner</span>
+                </h2>
+                <p className="text-muted-foreground">Find the most environmentally friendly route for your journey</p>
+              </div>
+            </div>
+            
+            <RoutePlannerForm onCalculateRoutes={(routeData) => {
+              // In a real app, this would make an API call to your backend
+              // The mock data is generated in the RoutePlannerForm component
+              
+              // Points for using the route planner (a small incentive)
+              if (user) {
+                const updatedUser = {
+                  ...user,
+                  points: user.points + 2
+                };
+                setUser(updatedUser);
+                localStorage.setItem('carbonCompanionUser', JSON.stringify(updatedUser));
+                
+                toast({
+                  title: "Route planning complete!",
+                  description: "You've earned 2 points for planning an eco-friendly route.",
+                });
+              }
+            }} />
+            
+            <Card className="shadow-sm hover:shadow-md transition-all border border-border/50 overflow-hidden bg-green-50 dark:bg-green-900/20">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-100 dark:bg-green-800/30 p-3 rounded-full">
+                    <Leaf className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium mb-1">Why Plan Your Route?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Different routes can have significantly different carbon footprints. By choosing the most eco-friendly route, 
+                      you can reduce your emissions by up to 30% compared to the most carbon-intensive option.
+                    </p>
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div className="text-center p-3 bg-white/70 dark:bg-background/70 rounded-lg">
+                        <p className="text-2xl font-bold text-green-600">↓15%</p>
+                        <p className="text-xs text-muted-foreground">Average CO₂ Reduction</p>
+                      </div>
+                      <div className="text-center p-3 bg-white/70 dark:bg-background/70 rounded-lg">
+                        <p className="text-2xl font-bold text-amber-600">↓8%</p>
+                        <p className="text-xs text-muted-foreground">Avg. Fuel Savings</p>
+                      </div>
+                      <div className="text-center p-3 bg-white/70 dark:bg-background/70 rounded-lg">
+                        <p className="text-2xl font-bold text-blue-600">+5min</p>
+                        <p className="text-xs text-muted-foreground">Typical Time Trade-off</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
